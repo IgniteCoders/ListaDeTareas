@@ -2,7 +2,7 @@ package com.example.listadetareas.data
 
 data class Category(
     val id: Long,
-    val title: String
+    var title: String
 ) {
     companion object {
         const val TABLE_NAME = "Categories"
