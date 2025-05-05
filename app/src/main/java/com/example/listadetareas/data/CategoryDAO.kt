@@ -1,9 +1,10 @@
-package com.example.listadetareas
+package com.example.listadetareas.data
 
 import android.content.ContentValues
 import android.content.Context
 import android.database.sqlite.SQLiteDatabase
 import android.util.Log
+import com.example.listadetareas.utils.DatabaseManager
 
 class CategoryDAO(private val context: Context) {
 

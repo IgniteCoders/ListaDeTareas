@@ -1,4 +1,4 @@
-package com.example.listadetareas
+package com.example.listadetareas.data
 
 data class Category(
     val id: Long,
