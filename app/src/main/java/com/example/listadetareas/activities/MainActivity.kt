@@ -46,12 +46,12 @@ class MainActivity : AppCompatActivity() {
         adapter = CategoryAdapter(categoryList, {
             // He pulsado una categoría
         }, { position ->
+            // Edit
             val category = categoryList[position]
             showCategoryDialog(category)
         }, { position ->
-            val category = categoryList[position]
-            categoryDAO.delete(category)
-            loadData()
+            // Delete
+            showDeleteConfirmation(position)
         })
 
         binding.recyclerView.adapter = adapter
@@ -91,6 +91,21 @@ class MainActivity : AppCompatActivity() {
              })
             .setNegativeButton(android.R.string.cancel, null)
             .setIcon(dialogIcon)
+            .show()
+    }
+
+    fun showDeleteConfirmation(position: Int) {
+        val category = categoryList[position]
+
+        MaterialAlertDialogBuilder(this)
+            .setTitle("Borrar categoría")
+            .setMessage("¿Está usted seguro de querer borrar esta categoría? Borrar la categoría, eliminará todas sus tareas!")
+            .setPositiveButton(android.R.string.ok, { dialog, which ->
+                categoryDAO.delete(category)
+                loadData()
+            })
+            .setNegativeButton(android.R.string.cancel, null)
+            .setIcon(R.drawable.ic_delete)
             .show()
     }
 
