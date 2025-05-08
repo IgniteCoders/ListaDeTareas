@@ -1,6 +1,7 @@
 package com.example.listadetareas.activities
 
 import android.content.DialogInterface
+import android.content.Intent
 import android.os.Bundle
 import androidx.activity.enableEdgeToEdge
 import androidx.appcompat.app.AlertDialog
@@ -43,8 +44,13 @@ class MainActivity : AppCompatActivity() {
 
         categoryList = categoryDAO.findAll()
 
-        adapter = CategoryAdapter(categoryList, {
+        adapter = CategoryAdapter(categoryList, { position ->
             // He pulsado una categoría
+            val category = categoryList[position]
+
+            val intent = Intent(this, TaskListActivity::class.java)
+            intent.putExtra("CATEGORY_ID", category.id)
+            startActivity(intent)
         }, { position ->
             // Edit
             val category = categoryList[position]
