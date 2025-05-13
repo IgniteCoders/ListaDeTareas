@@ -29,7 +29,9 @@ class TaskAdapter(
             onItemClick(position)
         }
         holder.binding.doneCheckBox.setOnCheckedChangeListener { compoundButton, b ->
-            onItemCheck(position)
+            if (holder.binding.doneCheckBox.isPressed) {
+                onItemCheck(position)
+            }
         }
     }
 
