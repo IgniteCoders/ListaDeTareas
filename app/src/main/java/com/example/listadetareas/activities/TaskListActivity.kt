@@ -13,7 +13,9 @@ import androidx.activity.enableEdgeToEdge
 import androidx.appcompat.app.AppCompatActivity
 import androidx.core.view.ViewCompat
 import androidx.core.view.WindowInsetsCompat
+import androidx.recyclerview.widget.ItemTouchHelper
 import androidx.recyclerview.widget.LinearLayoutManager
+import androidx.recyclerview.widget.RecyclerView
 import com.example.listadetareas.R
 import com.example.listadetareas.adapters.TaskAdapter
 import com.example.listadetareas.data.Category
@@ -54,50 +56,11 @@ class TaskListActivity : AppCompatActivity() {
         category = categoryDAO.findById(id)!!
         taskList = emptyList()
 
-        adapter = TaskAdapter(taskList, { position ->
-            val task = taskList[position]
-            val intent = Intent(this, TaskActivity::class.java)
-            intent.putExtra("CATEGORY_ID", category.id)
-            intent.putExtra("TASK_ID", task.id)
-            startActivity(intent)
-        }, { position ->
-            val task = taskList[position]
-            task.done = !task.done
-            taskDAO.update(task)
-            reloadData()
-        }, { position, v ->
-            val task = taskList[position]
-
-            val popup = PopupMenu(this, v)
-            popup.menuInflater.inflate(R.menu.task_context_menu, popup.menu)
-
-            popup.setOnMenuItemClickListener { menuItem: MenuItem ->
-                return@setOnMenuItemClickListener when (menuItem.itemId) {
-                    R.id.action_edit -> {
-                        val intent = Intent(this, TaskActivity::class.java)
-                        intent.putExtra("CATEGORY_ID", category.id)
-                        intent.putExtra("TASK_ID", task.id)
-                        startActivity(intent)
-                        true
-                    }
-                    R.id.action_delete -> {
-                        taskDAO.delete(task)
-                        reloadData()
-                        true
-                    }
-                    else -> super.onContextItemSelected(menuItem)
-                }
-            }
-
-            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
-                popup.setForceShowIcon(true)
-            }
-
-            popup.show()
-        })
+        adapter = TaskAdapter(taskList, ::showTask, ::checkTask, ::showMenuTask)
 
         binding.recyclerView.adapter = adapter
         binding.recyclerView.layoutManager = LinearLayoutManager(this)
+        configureGesture()
 
         supportActionBar?.title = category.title
         supportActionBar?.setDisplayHomeAsUpEnabled(true)
@@ -120,27 +83,6 @@ class TaskListActivity : AppCompatActivity() {
         adapter.updateItems(taskList)
     }
 
-    override fun onCreateContextMenu(menu: ContextMenu, v: View, menuInfo: ContextMenu.ContextMenuInfo?) {
-        super.onCreateContextMenu(menu, v, menuInfo)
-        menuInflater.inflate(R.menu.task_context_menu, menu)
-    }
-
-    // Then, to handle clicks:
-    override fun onContextItemSelected(item: MenuItem): Boolean {
-        val info = item.menuInfo as AdapterView.AdapterContextMenuInfo
-        return when (item.itemId) {
-            R.id.action_edit -> {
-                // Respond to context menu item 1 click.
-                true
-            }
-            R.id.action_delete -> {
-                // Respond to context menu item 2 click.
-                true
-            }
-            else -> super.onContextItemSelected(item)
-        }
-    }
-
     override fun onOptionsItemSelected(item: MenuItem): Boolean {
         when (item.itemId) {
             android.R.id.home -> {
@@ -149,5 +91,76 @@ class TaskListActivity : AppCompatActivity() {
             }
             else -> return super.onOptionsItemSelected(item)
         }
+    }
+
+    fun showTask(position: Int) {
+        val task = taskList[position]
+        val intent = Intent(this, TaskActivity::class.java)
+        intent.putExtra("CATEGORY_ID", category.id)
+        intent.putExtra("TASK_ID", task.id)
+        startActivity(intent)
+    }
+
+    fun checkTask(position: Int) {
+        val task = taskList[position]
+        task.done = !task.done
+        taskDAO.update(task)
+        reloadData()
+    }
+
+    fun showMenuTask(position: Int, view: View) {
+        val popup = PopupMenu(this, view)
+        popup.menuInflater.inflate(R.menu.task_context_menu, popup.menu)
+
+        popup.setOnMenuItemClickListener { menuItem: MenuItem ->
+            return@setOnMenuItemClickListener when (menuItem.itemId) {
+                R.id.action_edit -> {
+                    showTask(position)
+                    true
+                }
+                R.id.action_delete -> {
+                    deleteTask(position)
+                    true
+                }
+                else -> super.onContextItemSelected(menuItem)
+            }
+        }
+
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
+            popup.setForceShowIcon(true)
+        }
+
+        popup.show()
+    }
+
+    fun deleteTask(position: Int) {
+        val task = taskList[position]
+        taskDAO.delete(task)
+        reloadData()
+    }
+
+    fun configureGesture() {
+        val gestures = ItemTouchHelper(object : ItemTouchHelper.SimpleCallback(ItemTouchHelper.UP or ItemTouchHelper.DOWN, ItemTouchHelper.LEFT or ItemTouchHelper.RIGHT) {
+            override fun onMove(
+                recyclerView: RecyclerView,
+                viewHolder: RecyclerView.ViewHolder,
+                target: RecyclerView.ViewHolder
+            ): Boolean {
+                adapter.notifyItemMoved(viewHolder.adapterPosition, target.adapterPosition)
+                return true
+            }
+
+            override fun onSwiped(viewHolder: RecyclerView.ViewHolder, direction: Int) {
+                if (direction == ItemTouchHelper.LEFT) {
+                    deleteTask(viewHolder.adapterPosition)
+                } else {
+                    checkTask(viewHolder.adapterPosition)
+                }
+                adapter.notifyItemChanged(viewHolder.adapterPosition)
+            }
+
+        })
+
+        gestures.attachToRecyclerView(binding.recyclerView)
     }
 }
