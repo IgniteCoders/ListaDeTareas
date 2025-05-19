@@ -3,10 +3,12 @@ package com.example.listadetareas.adapters
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
+import androidx.recyclerview.widget.DiffUtil
 import androidx.recyclerview.widget.RecyclerView.Adapter
 import androidx.recyclerview.widget.RecyclerView.ViewHolder
 import com.example.listadetareas.data.Task
 import com.example.listadetareas.databinding.ItemTaskBinding
+import com.example.listadetareas.utils.TaskDiffUtil
 
 class TaskAdapter(
     var items: List<Task>,
@@ -28,21 +30,23 @@ class TaskAdapter(
         val task = items[position]
         holder.render(task)
         holder.itemView.setOnClickListener {
-            onItemClick(position)
+            onItemClick(holder.adapterPosition)
         }
         holder.binding.doneCheckBox.setOnCheckedChangeListener { compoundButton, b ->
             if (holder.binding.doneCheckBox.isPressed) {
-                onItemCheck(position)
+                onItemCheck(holder.adapterPosition)
             }
         }
         holder.binding.menuButton.setOnClickListener { view ->
-            onItemMenu(position, view)
+            onItemMenu(holder.adapterPosition, view)
         }
     }
 
     fun updateItems(items: List<Task>) {
+        val diffCallback = TaskDiffUtil(items, this.items)
+        val diffResult = DiffUtil.calculateDiff(diffCallback)
         this.items = items
-        notifyDataSetChanged()
+        diffResult.dispatchUpdatesTo(this)
     }
 }
 
