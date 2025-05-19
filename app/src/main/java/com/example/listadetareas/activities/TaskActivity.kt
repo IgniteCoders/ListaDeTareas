@@ -43,7 +43,7 @@ class TaskActivity : AppCompatActivity() {
 
         val id = intent.getLongExtra("TASK_ID", -1)
         if (id == -1L) {
-            task = Task(-1L, "", false, category)
+            task = Task(-1L, "", false, taskDAO.countAllByCategory(category), category)
         } else {
             task = taskDAO.findById(id)!!
         }

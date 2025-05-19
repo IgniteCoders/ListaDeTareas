@@ -3,12 +3,9 @@ package com.example.listadetareas.activities
 import android.content.Intent
 import android.os.Build
 import android.os.Bundle
-import android.view.ContextMenu
 import android.view.MenuItem
 import android.view.View
-import android.widget.AdapterView
 import android.widget.PopupMenu
-import android.widget.Toast
 import androidx.activity.enableEdgeToEdge
 import androidx.appcompat.app.AppCompatActivity
 import androidx.core.view.ViewCompat
@@ -23,6 +20,7 @@ import com.example.listadetareas.data.CategoryDAO
 import com.example.listadetareas.data.Task
 import com.example.listadetareas.data.TaskDAO
 import com.example.listadetareas.databinding.ActivityTaskListBinding
+import java.util.Collections
 
 class TaskListActivity : AppCompatActivity() {
 
@@ -139,6 +137,18 @@ class TaskListActivity : AppCompatActivity() {
         reloadData()
     }
 
+    fun swapTaskPositions(position1: Int, position2: Int) {
+        println("Swap from $position1 to $position2")
+        val task1 = taskList[position1]
+        val task2 = taskList[position2]
+        task1.position = position2
+        task2.position = position1
+        taskDAO.update(task1)
+        taskDAO.update(task2)
+        Collections.swap(taskList, position1, position2)
+        adapter.notifyItemMoved(position1, position2)
+    }
+
     fun configureGesture() {
         val gestures = ItemTouchHelper(object : ItemTouchHelper.SimpleCallback(ItemTouchHelper.UP or ItemTouchHelper.DOWN, ItemTouchHelper.LEFT or ItemTouchHelper.RIGHT) {
             override fun onMove(
@@ -146,7 +156,7 @@ class TaskListActivity : AppCompatActivity() {
                 viewHolder: RecyclerView.ViewHolder,
                 target: RecyclerView.ViewHolder
             ): Boolean {
-                adapter.notifyItemMoved(viewHolder.adapterPosition, target.adapterPosition)
+                swapTaskPositions(viewHolder.adapterPosition, target.adapterPosition)
                 return true
             }
 

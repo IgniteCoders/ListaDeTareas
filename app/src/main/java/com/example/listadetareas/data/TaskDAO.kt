@@ -27,6 +27,7 @@ class TaskDAO(private val context: Context) {
             val values = ContentValues()
             values.put(Task.COLUMN_NAME_TITLE, task.title)
             values.put(Task.COLUMN_NAME_DONE, task.done)
+            values.put(Task.COLUMN_NAME_POSITION, task.position)
             values.put(Task.COLUMN_NAME_CATEGORY, task.category.id)
 
             // Insert the new row, returning the primary key value of the new row
@@ -49,6 +50,7 @@ class TaskDAO(private val context: Context) {
             val values = ContentValues()
             values.put(Task.COLUMN_NAME_TITLE, task.title)
             values.put(Task.COLUMN_NAME_DONE, task.done)
+            values.put(Task.COLUMN_NAME_POSITION, task.position)
             values.put(Task.COLUMN_NAME_CATEGORY, task.category.id)
 
             // Which row to update, based on the id
@@ -95,6 +97,7 @@ class TaskDAO(private val context: Context) {
                 Task.COLUMN_NAME_ID,
                 Task.COLUMN_NAME_TITLE,
                 Task.COLUMN_NAME_DONE,
+                Task.COLUMN_NAME_POSITION,
                 Task.COLUMN_NAME_CATEGORY
             )
 
@@ -115,11 +118,12 @@ class TaskDAO(private val context: Context) {
                 val id = cursor.getLong(cursor.getColumnIndexOrThrow(Task.COLUMN_NAME_ID))
                 val title = cursor.getString(cursor.getColumnIndexOrThrow(Task.COLUMN_NAME_TITLE))
                 val done = cursor.getInt(cursor.getColumnIndexOrThrow(Task.COLUMN_NAME_DONE)) != 0
+                val position = cursor.getInt(cursor.getColumnIndexOrThrow(Task.COLUMN_NAME_POSITION))
                 val categoryId = cursor.getLong(cursor.getColumnIndexOrThrow(Task.COLUMN_NAME_CATEGORY))
 
                 val category = CategoryDAO(context).findById(categoryId)!!
 
-                task = Task(id, title, done, category)
+                task = Task(id, title, done, position, category)
             }
 
             cursor.close()
@@ -144,6 +148,7 @@ class TaskDAO(private val context: Context) {
                 Task.COLUMN_NAME_ID,
                 Task.COLUMN_NAME_TITLE,
                 Task.COLUMN_NAME_DONE,
+                Task.COLUMN_NAME_POSITION,
                 Task.COLUMN_NAME_CATEGORY
             )
 
@@ -164,11 +169,12 @@ class TaskDAO(private val context: Context) {
                 val id = cursor.getLong(cursor.getColumnIndexOrThrow(Task.COLUMN_NAME_ID))
                 val title = cursor.getString(cursor.getColumnIndexOrThrow(Task.COLUMN_NAME_TITLE))
                 val done = cursor.getInt(cursor.getColumnIndexOrThrow(Task.COLUMN_NAME_DONE)) != 0
+                val position = cursor.getInt(cursor.getColumnIndexOrThrow(Task.COLUMN_NAME_POSITION))
                 val categoryId = cursor.getLong(cursor.getColumnIndexOrThrow(Task.COLUMN_NAME_CATEGORY))
 
                 val category = CategoryDAO(context).findById(categoryId)!!
 
-                val task = Task(id, title, done, category)
+                val task = Task(id, title, done, position, category)
                 taskList.add(task)
             }
 
@@ -194,6 +200,7 @@ class TaskDAO(private val context: Context) {
                 Task.COLUMN_NAME_ID,
                 Task.COLUMN_NAME_TITLE,
                 Task.COLUMN_NAME_DONE,
+                Task.COLUMN_NAME_POSITION,
                 Task.COLUMN_NAME_CATEGORY
             )
 
@@ -207,18 +214,19 @@ class TaskDAO(private val context: Context) {
                 null,          // The values for the WHERE clause
                 null,                   // don't group the rows
                 null,                   // don't filter by row groups
-                "${Task.COLUMN_NAME_DONE}, ${Task.COLUMN_NAME_TITLE}"               // The sort order
+                Task.COLUMN_NAME_POSITION               // The sort order
             )
 
             while (cursor.moveToNext()) {
                 val id = cursor.getLong(cursor.getColumnIndexOrThrow(Task.COLUMN_NAME_ID))
                 val title = cursor.getString(cursor.getColumnIndexOrThrow(Task.COLUMN_NAME_TITLE))
                 val done = cursor.getInt(cursor.getColumnIndexOrThrow(Task.COLUMN_NAME_DONE)) != 0
+                val position = cursor.getInt(cursor.getColumnIndexOrThrow(Task.COLUMN_NAME_POSITION))
                 val categoryId = cursor.getLong(cursor.getColumnIndexOrThrow(Task.COLUMN_NAME_CATEGORY))
 
                 val category = CategoryDAO(context).findById(categoryId)!!
 
-                val task = Task(id, title, done, category)
+                val task = Task(id, title, done, position, category)
                 taskList.add(task)
             }
 
@@ -230,5 +238,65 @@ class TaskDAO(private val context: Context) {
         }
 
         return taskList
+    }
+
+    fun countAllByCategory(category: Category): Int {
+        open()
+
+        var count = 0
+
+        try {
+            val selection = "${Task.COLUMN_NAME_CATEGORY} = ${category.id}"
+
+            val cursor = db.query(
+                Task.TABLE_NAME,                 // The table to query
+                arrayOf("COUNT(*)"),     // The array of columns to return (pass null to get all)
+                selection,                // The columns for the WHERE clause
+                null,          // The values for the WHERE clause
+                null,                   // don't group the rows
+                null,                   // don't filter by row groups
+                null               // The sort order
+            )
+            if (cursor.moveToNext()) {
+                count = cursor.getInt(0)
+            }
+            cursor.close()
+        } catch (e: Exception) {
+            Log.e("DB", e.stackTraceToString())
+        } finally {
+            close()
+        }
+
+        return count
+    }
+
+    fun countAllByCategoryAndDone(category: Category, done: Boolean): Int {
+        open()
+
+        var count = 0
+
+        try {
+            val selection = "${Task.COLUMN_NAME_CATEGORY} = ${category.id} AND ${Task.COLUMN_NAME_DONE} = $done"
+
+            val cursor = db.query(
+                Task.TABLE_NAME,                 // The table to query
+                arrayOf("COUNT(*)"),     // The array of columns to return (pass null to get all)
+                selection,                // The columns for the WHERE clause
+                null,          // The values for the WHERE clause
+                null,                   // don't group the rows
+                null,                   // don't filter by row groups
+                null               // The sort order
+            )
+            if (cursor.moveToNext()) {
+                count = cursor.getInt(0)
+            }
+            cursor.close()
+        } catch (e: Exception) {
+            Log.e("DB", e.stackTraceToString())
+        } finally {
+            close()
+        }
+
+        return count
     }
 }

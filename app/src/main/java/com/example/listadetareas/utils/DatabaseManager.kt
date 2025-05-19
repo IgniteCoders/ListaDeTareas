@@ -10,7 +10,7 @@ class DatabaseManager(context: Context) : SQLiteOpenHelper(context, DATABASE_NAM
 
     companion object {
         // If you change the database schema, you must increment the database version.
-        const val DATABASE_VERSION = 2
+        const val DATABASE_VERSION = 3
         const val DATABASE_NAME = "ToDoList.db"
 
         private const val SQL_CREATE_CATEGORY =
@@ -25,6 +25,7 @@ class DatabaseManager(context: Context) : SQLiteOpenHelper(context, DATABASE_NAM
                     "${Task.COLUMN_NAME_ID} INTEGER PRIMARY KEY AUTOINCREMENT," +
                     "${Task.COLUMN_NAME_TITLE} TEXT, " +
                     "${Task.COLUMN_NAME_DONE} INTEGER, " +
+                    "${Task.COLUMN_NAME_POSITION} INTEGER, " +
                     "${Task.COLUMN_NAME_CATEGORY} INTEGER, " +
                     "FOREIGN KEY (${Task.COLUMN_NAME_CATEGORY}) " +
                     "REFERENCES ${Category.TABLE_NAME}(${Category.COLUMN_NAME_ID}))"
@@ -38,8 +39,11 @@ class DatabaseManager(context: Context) : SQLiteOpenHelper(context, DATABASE_NAM
     }
 
     override fun onUpgrade(db: SQLiteDatabase, oldVersion: Int, newVersion: Int) {
-        onDestroy(db)
-        onCreate(db)
+        if (oldVersion == 2 && newVersion == 3) {
+            db.execSQL("ALTER TABLE ${Task.TABLE_NAME} ADD ${Task.COLUMN_NAME_POSITION} INTEGER")
+        }
+        //onDestroy(db)
+        //onCreate(db)
     }
 
     private fun onDestroy(db: SQLiteDatabase) {

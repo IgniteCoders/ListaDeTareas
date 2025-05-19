@@ -42,7 +42,7 @@ class MainActivity : AppCompatActivity() {
 
         categoryDAO = CategoryDAO(this)
 
-        categoryList = categoryDAO.findAll()
+        categoryList = emptyList()
 
         adapter = CategoryAdapter(categoryList, { position ->
             // He pulsado una categoría
@@ -66,6 +66,13 @@ class MainActivity : AppCompatActivity() {
         binding.addCategoryButton.setOnClickListener {
             showCategoryDialog(Category(-1L, ""))
         }
+    }
+
+    override fun onResume() {
+        super.onResume()
+
+        categoryList = categoryDAO.findAll()
+        adapter.updateItems(categoryList)
     }
 
     fun showCategoryDialog(category: Category) {

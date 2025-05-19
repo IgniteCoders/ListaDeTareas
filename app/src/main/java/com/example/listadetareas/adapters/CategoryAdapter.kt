@@ -5,6 +5,7 @@ import android.view.ViewGroup
 import androidx.recyclerview.widget.RecyclerView.Adapter
 import androidx.recyclerview.widget.RecyclerView.ViewHolder
 import com.example.listadetareas.data.Category
+import com.example.listadetareas.data.TaskDAO
 import com.example.listadetareas.databinding.ItemCategoryBinding
 
 class CategoryAdapter(
@@ -47,5 +48,9 @@ class CategoryViewHolder(val binding: ItemCategoryBinding) : ViewHolder(binding.
 
     fun render(category: Category) {
         binding.titleTextView.text = category.title
+        val taskDAO = TaskDAO(itemView.context)
+        val leftNumber = taskDAO.countAllByCategoryAndDone(category, true)
+        val totalNumber = taskDAO.countAllByCategory(category)
+        binding.progressTextView.text = "$leftNumber/$totalNumber"
     }
 }
